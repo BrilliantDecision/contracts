@@ -42,7 +42,7 @@ class Database:
             if contract not in db_contracts:
                 new_contracts.append((contract, ))
 
-        sql_insert_query = '''INSERT INTO CONTRACTS(contract_id) VALUES (%S)'''
+        sql_insert_query = '''INSERT INTO CONTRACTS(contract_id) VALUES (%s)'''
         self.cursor.executemany(sql_insert_query, new_contracts)
         self.connection.commit()
 
