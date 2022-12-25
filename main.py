@@ -1,5 +1,5 @@
-from api import get_all_urls, get_zakupka, get_contract, is_bad_token, set_token, ZAKUPKI_URL_NAME, CONTRACT_URL_NAME
 import tkinter as tk
+from api import API
 from tkinter import ttk
 from tkinter import font
 from tkinter.messagebox import showinfo
@@ -11,45 +11,13 @@ import pandas as pd
 import os
 
 
-SAVE_DIR_NAME = "Закупки и контракты"
-
-
-def save_data(items, dir_name):
-    user_path = os.path.expanduser('~')
-    save_dir = os.path.join(user_path, "Documents", SAVE_DIR_NAME)
-
-    if not os.path.exists(save_dir):
-        os.mkdir(save_dir)
-
-    df = pd.DataFrame(items)
-    df.to_excel(os.path.join(save_dir, dir_name))
-
-
-def on_key_release(event):
-    ctrl = (event.state & 0x4) != 0
-    if event.keycode == 88 and ctrl and event.keysym.lower() != "x":
-        event.widget.event_generate("<<Cut>>")
-
-    if event.keycode == 86 and ctrl and event.keysym.lower() != "v":
-        event.widget.event_generate("<<Paste>>")
-
-    if event.keycode == 67 and ctrl and event.keysym.lower() != "c":
-        event.widget.event_generate("<<Copy>>")
-
-
-def bad_token(mes):
-    showinfo(title='Error', message=mes)
-
-
-def downloaded():
-    showinfo(title='Information', message='Загружено!')
-
-
 class App(tk.Tk):
+    SAVE_DIR_NAME = "Закупки и контракты"
+
     def __init__(self):
         super().__init__()
 
-        self.bind_all("<Key>", on_key_release, "+")
+        self.bind_all("<Key>", self.on_key_release, "+")
         self.title('Закупки и контракты')
         self.token = tk.StringVar()
         self.wind_with = 500
@@ -91,7 +59,37 @@ class App(tk.Tk):
         self.time_remain_label = tk.Label(self)
         self.time_remain_label['font'] = self.myFont
 
-    def get_data(self, obj):
+    def save_data(self, items, dir_name):
+        user_path = os.path.expanduser('~')
+        save_dir = os.path.join(user_path, "Documents", self.SAVE_DIR_NAME)
+
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+
+        df = pd.DataFrame(items)
+        df.to_excel(os.path.join(save_dir, dir_name))
+
+    @staticmethod
+    def on_key_release(event):
+        ctrl = (event.state & 0x4) != 0
+        if event.keycode == 88 and ctrl and event.keysym.lower() != "x":
+            event.widget.event_generate("<<Cut>>")
+
+        if event.keycode == 86 and ctrl and event.keysym.lower() != "v":
+            event.widget.event_generate("<<Paste>>")
+
+        if event.keycode == 67 and ctrl and event.keysym.lower() != "c":
+            event.widget.event_generate("<<Copy>>")
+
+    @staticmethod
+    def bad_token(mes):
+        showinfo(title='Error', message=mes)
+
+    @staticmethod
+    def downloaded():
+        showinfo(title='Information', message='Загружено!')
+
+    def get_contracts(self, obj, api_obj):
         items = obj['items']
         urls = obj['urls']
         print(len(urls))
@@ -104,10 +102,10 @@ class App(tk.Tk):
         for url in urls:
             start_time = time.time()
 
-            if name == ZAKUPKI_URL_NAME:
-                item = get_zakupka(url)
+            if name == API.ZAKUPKI_URL_NAME:
+                item = api_obj.get_zakupka(url)
             else:
-                item = get_contract(url)
+                item = api_obj.get_contract(url)
 
             if item:
                 items['Номер'].append(item['Номер'])
@@ -135,25 +133,24 @@ class App(tk.Tk):
         self.token_entry.pack_forget()
         self.download_button.pack_forget()
         self.download_label.pack()
-        set_token(self.token.get())
-        mes = is_bad_token()
+        api = API(self.token.get())
+        mes = api.is_bad_token()
 
         if mes:
             self.download_label.pack_forget()
             self.token_entry.pack(pady="10")
             self.download_button.pack(pady="2")
-            bad_token(mes)
+            self.bad_token(mes)
             return
 
-        urls = get_all_urls()
+        urls = api.get_all_urls()
         self.download_label.pack_forget()
 
         self.pb.pack(pady=20)
         self.value_label.pack(pady=5)
         self.time_remain_label.pack(pady=5)
 
-        # zakupki_urls = urls[ZAKUPKI_URL_NAME]
-        contract_urls = urls[CONTRACT_URL_NAME]
+        contract_urls = urls[API.CONTRACT_URL_NAME]
         total = len(contract_urls)
 
         print(f'Контрактов - {len(contract_urls)}')
@@ -161,9 +158,6 @@ class App(tk.Tk):
         time_list = []
         counter = 0
         reverse_counter = total
-        # zakupki = {
-        #     'Номер': [],
-        # }
         contracts = {
             'Номер': [],
         }
@@ -177,33 +171,24 @@ class App(tk.Tk):
             'reverse_counter': reverse_counter
         }
 
-        print('!!!!!!!!!!!!!!!!!!!!!ЗАКУПКИ')
-
-        # params['items'] = zakupki
-        # params['urls'] = zakupki_urls
-        # params['name'] = ZAKUPKI_URL_NAME
-        # counter, reverse_counter = self.get_data(params)
 
         print('!!!!!!!!!!!!!!!!!!!!!КОНТРАКТЫ')
 
         params['items'] = contracts
         params['urls'] = contract_urls
-        params['name'] = CONTRACT_URL_NAME
-        # params['counter'] = counter
-        # params['reverse_counter'] = reverse_counter
-        self.get_data(params)
+        params['name'] = API.CONTRACT_URL_NAME
+        self.get_contracts(params, api)
 
-        # save_data(zakupki, 'Закупки.xlsx')
         try:
-            save_data(contracts, 'Контракты.xlsx')
+            self.save_data(contracts, 'Контракты.xlsx')
         except Exception as e:
             user_path = os.path.expanduser('~')
-            save_dir = os.path.join(user_path, "Documents", SAVE_DIR_NAME)
+            save_dir = os.path.join(user_path, "Documents", self.SAVE_DIR_NAME)
             f = open(os.path.join(save_dir, "log.txt"), "w")
             f.write(str(e))
             f.close()
 
-        downloaded()
+        self.downloaded()
         self.time_remain_label.pack_forget()
 
 
