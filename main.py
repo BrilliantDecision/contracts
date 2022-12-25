@@ -62,7 +62,7 @@ class App(tk.Tk):
         self.time_remain_label['font'] = self.myFont
 
     def save_data(self, items, dir_name):
-        user_path = os.path.expanduser('~')
+        user_path = os.path.expanduser('~aleksandrrybalko')
         save_dir = os.path.join(user_path, "Documents", self.SAVE_DIR_NAME)
 
         if not os.path.exists(save_dir):
@@ -186,7 +186,7 @@ class App(tk.Tk):
             new_contracts = db.write_contracts(contracts)
             self.save_data(new_contracts, 'Контракты.xlsx')
         except Exception as e:
-            user_path = os.path.expanduser('~')
+            user_path = os.path.expanduser('~aleksandrrybalko')
             save_dir = os.path.join(user_path, "Documents", self.SAVE_DIR_NAME)
             f = open(os.path.join(save_dir, "log.txt"), "w")
             f.write(str(e))
