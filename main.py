@@ -64,7 +64,7 @@ class App(tk.Tk):
         self.token_entry.pack(pady="10")
 
         # download button
-        self.download_button = tk.Button(self, text='Загрузить закупки и контракты',
+        self.download_button = tk.Button(self, text='Загрузить контракты',
                                          width=27, command=self.create_thread)
         self.download_button.pack(pady="2")
 
