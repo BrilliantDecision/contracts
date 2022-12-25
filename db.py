@@ -21,7 +21,7 @@ class Database:
                                           password="",
                                           host="127.0.0.1",
                                           port="5432",
-                                          database="contracts")
+                                          database="aleksandrrybalko")
 
             # Курсор для выполнения операций с базой данных
             self.cursor = self.connection.cursor()
