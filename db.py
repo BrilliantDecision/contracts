@@ -27,3 +27,7 @@ class Database:
             self.cursor = self.connection.cursor()
         except (Exception, Error) as error:
             print("Ошибка при работе с PostgreSQL", error)
+
+    def write_contracts(self, contracts):
+        self.cursor.execute("""SELECT * FROM contracts""")
+        records = self.cursor.fetch_all()
