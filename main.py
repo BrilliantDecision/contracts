@@ -10,6 +10,8 @@ import datetime
 import pandas as pd
 import os
 
+from db import Database
+
 
 class App(tk.Tk):
     SAVE_DIR_NAME = "Закупки и контракты"
@@ -134,6 +136,7 @@ class App(tk.Tk):
         self.download_button.pack_forget()
         self.download_label.pack()
         api = API(self.token.get())
+        db = Database()
         mes = api.is_bad_token()
 
         if mes:
@@ -180,7 +183,8 @@ class App(tk.Tk):
         self.get_contracts(params, api)
 
         try:
-            self.save_data(contracts, 'Контракты.xlsx')
+            new_contracts = db.write_contracts(contracts)
+            self.save_data(new_contracts, 'Контракты.xlsx')
         except Exception as e:
             user_path = os.path.expanduser('~')
             save_dir = os.path.join(user_path, "Documents", self.SAVE_DIR_NAME)

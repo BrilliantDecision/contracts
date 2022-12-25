@@ -16,12 +16,12 @@ class Database:
     def create_connection(self):
         try:
             # Подключение к существующей базе данных
-            self.connection = psycopg2.connect(user="postgres",
+            self.connection = psycopg2.connect(user="aleksandrrybalko",
                                           # пароль, который указали при установке PostgreSQL
-                                          password="alexandr999",
+                                          password="",
                                           host="127.0.0.1",
                                           port="5432",
-                                          database="postgres")
+                                          database="contracts")
 
             # Курсор для выполнения операций с базой данных
             self.cursor = self.connection.cursor()
@@ -30,4 +30,20 @@ class Database:
 
     def write_contracts(self, contracts):
         self.cursor.execute("""SELECT * FROM contracts""")
-        records = self.cursor.fetch_all()
+        records = self.cursor.fetchall()
+        print(records)
+
+        db_contracts = []
+        for record in records:
+            db_contracts.append(record[1])
+
+        new_contracts = []
+        for contract in contracts:
+            if contract not in db_contracts:
+                new_contracts.append((contract, ))
+
+        sql_insert_query = '''INSERT INTO CONTRACTS(contract_id) VALUES (%S)'''
+        self.cursor.executemany(sql_insert_query, new_contracts)
+        self.connection.commit()
+
+        return new_contracts
